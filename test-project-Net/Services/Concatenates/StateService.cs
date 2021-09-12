@@ -14,7 +14,6 @@ namespace test_project_Net.Services.Concatenates
     public class StateService:IStateService
     {
         private readonly IFileRepository _fileRepository;
-        private readonly IMapper _mapper;
         private readonly List<State> _states;
         public StateService(IFileRepository fileRepository,IMapper mapper)
         {

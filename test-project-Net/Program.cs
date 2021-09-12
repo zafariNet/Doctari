@@ -10,7 +10,12 @@ namespace test_project_Net
     {
         public static void Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration().WriteTo.File(@"logs\log.txt").MinimumLevel.Error().CreateLogger();
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.File(@"logs\log.txt")
+                .Filter.ByIncludingOnly(x =>
+                    (x.MessageTemplate.Text.ToLower().Contains("take")) &&
+                    x.Level == Serilog.Events.LogEventLevel.Information)
+                .CreateLogger();
             try
             {
 
@@ -29,9 +34,6 @@ namespace test_project_Net
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .UseSerilog()
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
+                .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
     }
 }

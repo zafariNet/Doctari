@@ -24,15 +24,15 @@
                 <th scope="col">City</th>
                 <th scope="col">Postal Code</th>
                 <th scope="col">State</th>
-                <th scope="col">Come From</th>
+                <th scope="col">Source</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var item in IndexModel.People.Select((value,i) => new {i, value}))
 
             {
-            <tr class="@(item.value.IsValid==false ? "bg-danger .text-warning" : null)"
-                class="@(item.value.State=="State not found!" ? "bg-warning .text-danger" : null) ">
+            <tr class="@(item.value.IsValid==false ? "bg-danger .text-warning" : null) @(item.value.State=="State not found!" ? "bg-warning .text-danger" : null) "
+                >
                 <td>@((int)item.i+1)</td>
                 <td>@item.value.FullName</td>
                 <td>@item.value.Address</td>

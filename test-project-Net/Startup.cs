@@ -20,8 +20,7 @@ namespace test_project_Net
         }
 
         public IConfiguration Configuration { get; }
-
-        // This method gets called by the runtime. Use this method to add services to the container.
+        
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRazorPages();
@@ -58,7 +57,7 @@ namespace test_project_Net
                 stopWatch.Start();
 
                 await next();
-                logger.LogError($"Calling service take : {stopWatch.Elapsed.Milliseconds} Milliseconds");
+                logger.LogInformation($"Calling service take : {stopWatch.Elapsed.Milliseconds} Milliseconds");
             });
             app.UseEndpoints(endpoints => { endpoints.MapRazorPages(); });
         }
