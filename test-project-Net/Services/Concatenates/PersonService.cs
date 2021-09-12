@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using test_project_Net.Domain.Models.GeoCodes;
-using test_project_Net.ExtraWebServices.Concatenates;
-using test_project_Net.ExtraWebServices.Interfaces;
-using test_project_Net.Repositories.Concatenates;
+using test_project_Net.Domain;
+using test_project_Net.Domain.GeoCodes;
+using test_project_Net.ExternalWebServices.Interfaces;
 using test_project_Net.Repositories.Interfaces;
 using test_project_Net.Services.Interfaces;
 using test_project_Net.Services.ViewModels;
@@ -15,51 +13,57 @@ namespace test_project_Net.Services.Concatenates
 {
     public class PersonService:IPersonService
     {
-        private readonly IPersonsRepository _personsRepository;
+        private readonly IFileRepository _fileRepository;
         private readonly IGoogleService _googleService;
+        private readonly IStateService _stateService;
 
-        public PersonService()
+        public PersonService(IFileRepository fileRepository, IGoogleService googleService, IStateService stateService)
         {
-            _personsRepository = new PersonRepository();
-            _googleService = new GoogleService();
+            _fileRepository = fileRepository;
+            _googleService = googleService;
+            _stateService = stateService;
+
         }
 
-        public async Task<List<PersonView>> GetEstateForAllPersonAsync()
+        public async Task<List<PersonView>> GetStateForAllPersonAsync()
         {
             var personList = new List<PersonView>();
-            var persons = _personsRepository.GetAllPersons();
             try
             {
-
-                foreach (var person in persons)
+                var savedPersons = _fileRepository.GetAllPersons();
+                foreach (var person in savedPersons)
                 {
-                    var result =person.IsValid? await _googleService.GetGeoCodeAddressAsync(person.PostalCode):new Root(){Status = "Invalid Data"};
-                        personList.Add(new PersonView
-                        {
-                            FullName = person.FullName,
-                            PostalCode = person.PostalCode,
-                            Address = person.Address,
-                            IsValid = person.IsValid,
-                            State = GetState(result)
-                        });
+                    var state = _stateService.GetStateFromFile(person.PostalCode);
+                    var root = new GoogleResponseModel();
+                    if (state==null)
+                     root= person.IsValid
+                        ? await _googleService.GetGeoCodeAddressAsync($"{person.PostalCode} {person.City}")
+                        : new GoogleResponseModel(){Status = "Invalid"};
+                    var personView = new PersonView
+                    {
+                        FullName = person.FullName,
+                        PostalCode = person.PostalCode,
+                        City = person.City,
+                        Address = person.Address,
+                        IsValid = person.IsValid,
+                        State = state ?? _stateService.GetState(root),
+                        PersonDataStatus = state==null?PersonDataStatus.StateComesFromGoogle:PersonDataStatus.SateComesFromFile
+
+                    };
+                    personList.Add(personView);
                 }
+
+                _stateService.AddStateToFile(personList);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
                 throw;
             }
+
             return personList;
         }
 
-        private string GetState(Root data)
-        {
-            if(data.Status=="OK")
-                return data.Results[0].Address_Components.FirstOrDefault(x => x.Types.Contains("administrative_area_level_1"))?.Long_Name;
-            if (data.Results?.Count == 0)
-                return "State not found!";
-            return data.Status;
-
-        }
+      
     }
 }

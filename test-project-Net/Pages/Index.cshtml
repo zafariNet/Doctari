@@ -1,0 +1,60 @@
+﻿@page
+@using test_project_Net.Domain.GeoCodes
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <br />
+    @*<ul>
+        @foreach (var person in IndexModel.People)
+        {
+            <li>@person.FullName</li>
+        }
+    </ul>*@
+
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th scope="col">Number</th>
+                <th scope="col">Full Name</th>
+                <th scope="col">Address</th>
+                <th scope="col">City</th>
+                <th scope="col">Postal Code</th>
+                <th scope="col">State</th>
+                <th scope="col">Come From</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in IndexModel.People.Select((value,i) => new {i, value}))
+
+            {
+            <tr class="@(item.value.IsValid==false ? "bg-danger .text-warning" : null)"
+                class="@(item.value.State=="State not found!" ? "bg-warning .text-danger" : null) ">
+                <td>@((int)item.i+1)</td>
+                <td>@item.value.FullName</td>
+                <td>@item.value.Address</td>
+                <td>@item.value.City</td>
+                <td>@item.value.PostalCode</td>
+                <td class="@(item.value.IsValid==false ? "font-weight-bold" : null)">@item.value.State</td>
+                @if (item.value.PersonDataStatus == PersonDataStatus.StateComesFromGoogle && item.value.IsValid)
+                {
+                    <td>Google</td>
+                }
+                else if (item.value.PersonDataStatus == PersonDataStatus.SateComesFromFile && item.value.IsValid)
+                {
+                    <td>Cache</td>
+                }
+                else
+                {
+                    <td>-</td>
+                }
+
+            </tr>
+            }
+
+        </tbody>
+    </table>
+</div>

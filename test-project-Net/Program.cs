@@ -1,54 +1,37 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using test_project_Net.ExtraWebServices.Concatenates;
-using test_project_Net.Repositories.Concatenates;
-using test_project_Net.Services.Concatenates;
-using test_project_Net.Services.Interfaces;
-using test_project_Net.Services.ViewModels;
+using System;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace test_project_Net
 {
-    /// <summary>
-    /// start class of test project
-    /// </summary>
-    class Program
+    public class Program
     {
-
-        /// <summary>
-        /// use DataReader to get content
-        /// and display with console
-        /// </summary>
-        static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
-
-            var personService = new PersonService();
-            var results = await GetData();
-
-            foreach (var person in results)
+            Log.Logger = new LoggerConfiguration().WriteTo.File(@"logs\log.txt").MinimumLevel.Error().CreateLogger();
+            try
             {
-                Console.WriteLine($"Name : {person.FullName}");
-                Console.WriteLine($"Address : {person.Address}");
-                Console.WriteLine($"Postal Code : {person.PostalCode}");
-                Console.WriteLine($"Is Valid : {person.IsValid}");
-                Console.WriteLine($"State : {person.State}");
+
+                CreateHostBuilder(args).Build().Run();
             }
-
-            Console.WriteLine();
-            Console.WriteLine("Press any key to continue");
-            Console.ReadKey();
+            catch (Exception ex)
+            {
+                Log.Fatal(ex, "Host terminated!");
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
         }
 
-
-        public static async Task<List<PersonView>> GetData()
-        {
-            IPersonService personService= new PersonService();
-            var result = await personService.GetEstateForAllPersonAsync();
-            return result;
-        }
-       
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .UseSerilog()
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseStartup<Startup>();
+                });
     }
 }
